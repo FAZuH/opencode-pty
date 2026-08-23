@@ -1,11 +1,11 @@
 import type { PTYSession } from './types.ts'
-import type { OpencodeClient } from '@opencode-ai/sdk'
+import type { HostClient } from '../host-client.ts'
 import { NOTIFICATION_LINE_TRUNCATE, NOTIFICATION_TITLE_TRUNCATE } from '../constants.ts'
 
 export class NotificationManager {
-  private client: OpencodeClient | null = null
+  private client: HostClient | null = null
 
-  init(client: OpencodeClient): void {
+  init(client: HostClient | null): void {
     this.client = client
   }
 

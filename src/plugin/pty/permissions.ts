@@ -1,4 +1,4 @@
-import type { PluginClient } from '../types.ts'
+import type { HostClient } from '../host-client.ts'
 import { allStructured } from './wildcard.ts'
 
 type PermissionAction = 'allow' | 'ask' | 'deny'
@@ -9,10 +9,10 @@ interface PermissionConfig {
   external_directory?: PermissionAction
 }
 
-let _client: PluginClient | null = null
+let _client: HostClient | null = null
 let _directory: string | null = null
 
-export function initPermissions(client: PluginClient, directory: string): void {
+export function initPermissions(client: HostClient | null, directory: string | null): void {
   _client = client
   _directory = directory
 }

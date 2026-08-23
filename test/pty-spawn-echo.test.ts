@@ -56,7 +56,8 @@ describe('ptySpawn Integration', () => {
     expect(result).toContain('Command: echo Hello World')
     expect(result).toContain('Status: running')
 
-    const sessionIdMatch = result.match(/ID: (.+)/)
+    const output = typeof result === 'string' ? result : result.output
+    const sessionIdMatch = output.match(/ID: (.+)/)
     expect(sessionIdMatch).toBeTruthy()
     const sessionId = sessionIdMatch?.[1] ?? ''
 

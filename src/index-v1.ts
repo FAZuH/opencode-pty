@@ -1,30 +1,25 @@
 import type { PluginContext, PluginResult } from './plugin/types.ts'
-import { initManager, manager } from './plugin/pty/manager.ts'
-import { initPermissions } from './plugin/pty/permissions.ts'
+import { initCore } from './core.ts'
+import { manager } from './plugin/pty/manager.ts'
 import { ptySpawn } from './plugin/pty/tools/spawn.ts'
 import { ptyWrite } from './plugin/pty/tools/write.ts'
 import { ptyRead } from './plugin/pty/tools/read.ts'
 import { ptyList } from './plugin/pty/tools/list.ts'
 import { ptyKill } from './plugin/pty/tools/kill.ts'
-import { PTYServer } from './web/server/server.ts'
 import open from 'open'
 
 const ptyOpenClientCommand = 'pty-open-background-spy'
 const ptyShowServerUrlCommand = 'pty-show-server-url'
 
 export const PTYPlugin = async ({ client, directory }: PluginContext): Promise<PluginResult> => {
-  initPermissions(client, directory)
-  initManager(client)
-  let ptyServer: PTYServer | undefined
+  const core = initCore({ client, directory })
 
   return {
     'command.execute.before': async (input) => {
       if (input.command !== ptyOpenClientCommand && input.command !== ptyShowServerUrlCommand) {
         return
       }
-      if (ptyServer === undefined) {
-        ptyServer = await PTYServer.createServer()
-      }
+      const ptyServer = await core.ensureServer()
       if (input.command === ptyOpenClientCommand) {
         open(ptyServer.server.url.origin)
       } else if (input.command === ptyShowServerUrlCommand) {
@@ -71,3 +66,5 @@ export const PTYPlugin = async ({ client, directory }: PluginContext): Promise<P
     },
   }
 }
+
+export const server = PTYPlugin
