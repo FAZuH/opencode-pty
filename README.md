@@ -40,6 +40,65 @@ Add the plugin to your [OpenCode config](https://opencode.ai/docs/config/):
 
 That's it. OpenCode will automatically install the plugin on next run.
 
+### OpenCode v2 (beta)
+
+OpenCode 2 uses the new `plugins` config key and a different plugin API. From
+branch `feat/port-v2` onward this plugin ships **both** APIs from one package:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": [{ "package": "opencode-pty" }]
+}
+```
+
+v2-specific behavior (see also [Compatibility](#compatibility)):
+
+- The five PTY tools work the same. They are registered with per-tool
+  permission resources (`pty_spawn`, `pty_write`, `pty_read`, `pty_list`,
+  `pty_kill`) so you can target them in v2's ordered
+  `permissions: [{ action, resource, effect }]` rules.
+- The two slash commands exist but, because v2 has no command interception,
+  they only inject their prompt text. To open or locate the web interface,
+  ask the agent to use the **`pty_web`** tool instead — it starts the web
+  server on demand and returns (and by default opens) its URL.
+
+#### Local / development installs
+
+Instead of an npm package, v2 can load a single plugin file from
+`.opencode/plugin(s)/` or a path in `plugins`. Point it at the **hybrid**
+build output, which carries both loader contracts:
+
+```jsonc
+// .opencode/opencode.json (project-local dev setup)
+{ "plugin": ["../dist/src/index-hybrid.js"] }
+```
+
+`dist/` is gitignored — run `bun run build:plugin` first (a fresh clone will
+not resolve this entry until built). Files under `.opencode/plugin(s)/`
+hot-reload on change; config-entry and npm-installed plugins need a restart.
+
+## Compatibility
+
+| | OpenCode 1.x | OpenCode 2 (beta) |
+|---|---|---|
+| Config key | `"plugin": ["opencode-pty"]` | `"plugins": [{"package": "opencode-pty"}]` |
+| Entry used | `./server` (named export) | `.` (`Plugin.define`) |
+| Tools | `pty_spawn/write/read/list/kill` | same, plus `pty_web` |
+| Slash commands | fully functional (intercepted) | registered; use `pty_web` tool for the web UI |
+| Permission gating | reads `permission.bash` / `external_directory` from config | host-enforced via each tool's `permission` resource |
+| Session cleanup on delete | `session.deleted` event hook | `ctx.event.subscribe()` |
+
+Notes and caveats during the v2 beta:
+
+- The v2 support is built against `@opencode-ai/plugin` beta
+  (`0.0.0-beta-17927`). Beta APIs may shift before 2.0 stable; match plugin
+  releases to your OpenCode release.
+- On v2 the plugin cannot read your permission config directly (no config
+  introspection surface yet); gating relies on host rules as above and fails
+  open when no rule matches.
+- v1 support is unchanged: existing 1.x users need no action.
+
 ## Updating
 
 OpenCode automatically checks for and installs plugin updates on startup. You don't need to do anything manually!
